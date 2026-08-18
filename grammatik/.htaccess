@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "\.(php|css|js|htaccess)$">
+    Require all granted
+</FilesMatch>

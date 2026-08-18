@@ -1,0 +1,3 @@
+<?php
+declare(strict_types=1);$auth->requireAdmin();$csrf->verify();$id=(int)($_POST['id']??0);$wd=trim((string)($_POST['wort_de']??''));$wi=trim((string)($_POST['wort_it']??''));$sd=trim((string)($_POST['satz_de']??''));$si=trim((string)($_POST['satz_it']??''));$lr=trim((string)($_POST['lektion']??''));$l=$lr===''?null:(int)$lr;
+if($id<=0||$wd===''||$wi==='')$flash->set('error','Ungültige oder unvollständige Daten.');elseif($cardRepository->update($id,$wd,$wi,$sd,$si,$l))$flash->set('success','Lernkarte aktualisiert.');else$flash->set('error','Änderung fehlgeschlagen.');header('Location: index.php?action=admin#lernkarten');exit;

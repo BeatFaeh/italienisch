@@ -1,0 +1,46 @@
+:root{--saffron:#c98324;--saffron-dark:#8f5d18;--lotus:#b96f7e;--bodhi:#5f7654;--bodhi-dark:#40533a;--ink:#2f332c;--muted:#74766e;--line:#ded6c6;--paper:rgba(255,253,248,.96)}
+*{box-sizing:border-box}
+.exam-page{min-height:100vh;padding:36px 18px}
+.exam-wrapper{width:min(1000px,100%);margin:0 auto}
+.exam-intro,.exam-question,.exam-submit-card,.exam-result{margin-bottom:20px;padding:clamp(22px,4vw,36px);border-radius:20px;background:var(--paper);box-shadow:0 16px 45px rgba(72,56,35,.11)}
+.exam-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;border-top:6px solid var(--saffron)}
+.exam-intro h2{margin:4px 0 8px;font-size:clamp(25px,4vw,36px)}
+.exam-intro p{margin-bottom:0;color:var(--muted);line-height:1.65}
+.exam-progress-box{min-width:155px;padding:16px;border-radius:14px;background:#e9efe6;color:var(--bodhi-dark);text-align:center}
+.exam-progress-box strong{font-size:28px}
+.exam-notice{margin-bottom:20px;padding:14px 18px;border-radius:14px;background:#f8f0df;color:var(--saffron-dark);font-weight:800}
+.exam-question{border-left:5px solid var(--lotus)}
+.exam-question-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.exam-question h2{margin:0 0 22px;font-size:clamp(21px,3vw,29px);line-height:1.35}
+.exam-status{color:var(--muted);font-size:14px;font-weight:800}
+.exam-status.correct{color:#315a35}
+.exam-status.wrong{color:#8a3434}
+.exam-options{display:grid;gap:11px}
+.exam-option{display:grid;grid-template-columns:22px 42px 1fr;gap:12px;align-items:center;padding:13px 15px;border:2px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;transition:border-color .15s ease,background-color .15s ease}
+.exam-option:hover{border-color:var(--saffron)}
+.exam-option:has(input:checked){border-color:var(--saffron);background:#fbf5e8}
+.exam-option.correct{border-color:#4f7b52!important;background:#e4f2e4!important}
+.exam-option.wrong{border-color:#a94747!important;background:#fbe7e7!important}
+.exam-option input{width:18px;height:18px;accent-color:var(--saffron)}
+.exam-answer{line-height:1.5}
+.exam-submit-card{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;border-top:5px solid var(--bodhi)}
+.exam-submit-card p{margin:0;color:var(--muted)}
+.exam-evaluate:disabled{opacity:.45;cursor:not-allowed}
+.exam-result{border-top:7px solid var(--saffron);text-align:center}
+.exam-score{display:flex;flex-direction:column;align-items:center;margin:12px 0}
+.exam-score strong{color:var(--saffron-dark);font-size:clamp(64px,12vw,110px);line-height:1}
+.exam-score span{margin-top:8px;color:var(--muted);font-size:22px}
+#score-percent{margin:10px 0 4px;color:var(--bodhi-dark);font-size:28px;font-weight:900}
+#score-message{font-size:18px}
+.exam-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+@media(max-width:720px){.exam-intro{display:block}.exam-progress-box{margin-top:18px}.exam-submit-card,.exam-result-actions{grid-template-columns:1fr}.exam-question-head{align-items:flex-start;flex-direction:column}.exam-option{grid-template-columns:20px 38px 1fr}}
+.exam-intro{border-top-color:#16864b}.exam-question{border-left-color:#c83a42}.exam-progress-box{background:#e8f5ed;color:#0d6336}.exam-option:hover,.exam-option:has(input:checked){border-color:#16864b}.exam-option input{accent-color:#16864b}.exam-result{border-top-color:#16864b}.exam-score strong{color:#c83a42}
+.exam-config-card{margin-bottom:20px;padding:clamp(22px,4vw,36px);border-radius:20px;background:var(--paper);box-shadow:0 16px 45px rgba(72,56,35,.11);border-top:6px solid #16864b}
+.exam-config-card h2{margin:4px 0 18px;font-size:clamp(24px,4vw,34px)}
+.exam-config-form{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1fr) auto;gap:14px;align-items:end}
+.exam-config-form label{display:grid;gap:7px;color:var(--ink);font-weight:800}
+.exam-config-form select{width:100%;min-height:46px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:inherit}
+.exam-config-form select:focus{outline:none;border-color:#16864b;box-shadow:0 0 0 3px rgba(22,134,75,.12)}
+.exam-config-form .button{min-height:46px}
+.exam-hint{margin-top:12px!important;padding:10px 12px;border-radius:10px;background:#fff4d9;color:#7a5813!important;font-weight:700}
+@media(max-width:720px){.exam-config-form{grid-template-columns:1fr}.exam-config-form .button{width:100%}}
