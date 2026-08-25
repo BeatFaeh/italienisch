@@ -58,12 +58,64 @@ final class CardRepository
 
     public function findByTerm(string $term, string $direction='de-it', string $type='wort', ?int $lesson=null): ?array
     {
-        $term=trim($term); if($term==='')return null;
+        $rows = $this->searchByTerm($term, $direction, $type, $lesson, 1);
+        return $rows[0] ?? null;
+    }
+
+    /**
+     * Sucht gezielt nach einem Wort bzw. Satz in beiden Sprachen.
+     * Exakte Treffer werden vor Teiltreffern angezeigt.
+     */
+    public function searchByTerm(
+        string $term,
+        string $direction='de-it',
+        string $type='wort',
+        ?int $lesson=null,
+        int $limit=50
+    ): array {
+        $term = trim($term);
+        if ($term === '') return [];
+
         [$q,$a] = $this->fields($direction,$type);
-        $sql="SELECT id,wort_de,wort_it,satz_de,satz_it,lektion,$q AS frage,$a AS antwort FROM italienisch_woerter_und_saetze WHERE (wort_de LIKE CONCAT('%',?,'%') OR wort_it LIKE CONCAT('%',?,'%') OR satz_de LIKE CONCAT('%',?,'%') OR satz_it LIKE CONCAT('%',?,'%')) AND ".$this->validWhere($q,$a);
-        if($lesson!==null)$sql.=' AND lektion='.(int)$lesson;
-        $sql.=' ORDER BY id ASC LIMIT 1';
-        $stmt=$this->db->prepare($sql); if(!$stmt)return null; $stmt->bind_param('ssss',$term,$term,$term,$term); $stmt->execute(); $row=$stmt->get_result()->fetch_assoc(); $stmt->close(); return $row?:null;
+
+        // Die Suche bezieht sich immer auf die Wörter, unabhängig davon,
+        // ob aktuell Wort- oder Satzkarten angezeigt werden. Dadurch findet
+        // z. B. "cappu" auch "cappuccino".
+        $de = 'wort_de';
+        $it = 'wort_it';
+        $limit = max(1, min(100, $limit));
+
+        $sql = "SELECT id,wort_de,wort_it,satz_de,satz_it,lektion,$q AS frage,$a AS antwort
+                FROM italienisch_woerter_und_saetze
+                WHERE ($de LIKE CONCAT('%',?,'%') OR $it LIKE CONCAT('%',?,'%'))
+                  AND ".$this->validWhere($q,$a);
+
+        if ($lesson !== null) {
+            $sql .= ' AND lektion='.(int)$lesson;
+        }
+
+        $sql .= " ORDER BY
+                    CASE
+                        WHEN LOWER(TRIM($de)) = LOWER(TRIM(?)) THEN 0
+                        WHEN LOWER(TRIM($it)) = LOWER(TRIM(?)) THEN 0
+                        WHEN LOWER(TRIM($de)) LIKE CONCAT(LOWER(TRIM(?)),'%') THEN 1
+                        WHEN LOWER(TRIM($it)) LIKE CONCAT(LOWER(TRIM(?)),'%') THEN 1
+                        ELSE 2
+                    END,
+                    COALESCE(lektion,999999), id ASC
+                  LIMIT $limit";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) return [];
+        $stmt->bind_param('ssssss', $term, $term, $term, $term, $term, $term);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = [];
+        while ($result && $row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        $stmt->close();
+        return $rows;
     }
 
     public function all(?int $lesson=null): array

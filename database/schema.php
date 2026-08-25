@@ -18,13 +18,15 @@ $db->query("CREATE TABLE IF NOT EXISTS italienisch_einstellungen (
 
 $db->query("CREATE TABLE IF NOT EXISTS italienisch_verben (
  id INT NOT NULL AUTO_INCREMENT,
- verb VARCHAR(250) DEFAULT NULL,
- praesens VARCHAR(250) DEFAULT NULL,
- perfekt VARCHAR(250) DEFAULT NULL,
- futur VARCHAR(250) DEFAULT NULL,
- imperativ VARCHAR(250) DEFAULT NULL,
+ verb_it VARCHAR(250) DEFAULT NULL,
+ verb_de VARCHAR(250) DEFAULT NULL,
+ praesens VARCHAR(500) DEFAULT NULL,
+ perfekt VARCHAR(500) DEFAULT NULL,
+ futur VARCHAR(500) DEFAULT NULL,
+ imperativ VARCHAR(500) DEFAULT NULL,
  endung VARCHAR(50) DEFAULT NULL,
- PRIMARY KEY(id)
+ PRIMARY KEY(id),
+ FULLTEXT KEY ft_italienisch_verben (verb_it, verb_de, praesens, perfekt, futur, imperativ)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
 $db->query("CREATE TABLE IF NOT EXISTS italienisch_grammatik (

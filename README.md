@@ -60,3 +60,10 @@ Im Administrationsbereich kann nach Datenbank-ID, deutschem Wort und italienisch
 - Beim Umbenennen/Löschen einer Grammatik-PDF werden passende DB-Verweise im Feld `pdf` automatisch angepasst bzw. geleert.
 - `database/italienisch_grammatik.sql` liegt als Fallback-/Referenzstruktur bei. `database/schema.php` legt die Tabelle bei Neuinstallationen ebenfalls an.
 - Die Repository-Schicht erkennt für das Stichwort auch die Spaltennamen `begriff`, `thema` oder `titel` sowie gängige Inhalts-Spaltennamen.
+
+## Anpassung 24.08.2026 – Verben
+
+Die Verbenverwaltung verwendet nun die Tabellenfelder `verb_it` und `verb_de`.
+Die Suche durchsucht Italienisch, Deutsch, Präsens, Perfekt, Futur, Imperativ und Endung und unterstützt Teilwörter.
+Der PDF-Ausdruck kann wahlweise nach Italienisch A–Z oder Deutsch A–Z sortiert werden.
+Die Datei `database/migration_verben_aktuelle_struktur.sql` enthält die ergänzende Datenbankmigration für AUTO_INCREMENT und den Volltextindex.

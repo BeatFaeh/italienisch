@@ -3,7 +3,8 @@ declare(strict_types=1);
 $auth->requireAdmin();
 $csrf->verify();
 $id = (int)($_POST['id'] ?? 0);
-$verb = trim((string)($_POST['verb'] ?? ''));
+$verbIt = trim((string)($_POST['verb_it'] ?? ''));
+$verbDe = trim((string)($_POST['verb_de'] ?? ''));
 $praesens = trim((string)($_POST['praesens'] ?? ''));
 $perfekt = trim((string)($_POST['perfekt'] ?? ''));
 $futur = trim((string)($_POST['futur'] ?? ''));
@@ -12,9 +13,9 @@ $endung = trim((string)($_POST['endung'] ?? ''));
 $allowedEndings = ['ire','are','ere','unregelmässig'];
 if (!in_array($endung, $allowedEndings, true)) { $endung = 'unregelmässig'; }
 
-if ($id <= 0 || $verb === '') {
-    $flash->set('error', 'Ungültige oder unvollständige Verbdaten.');
-} elseif ($verbRepository->update($id, $verb, $praesens, $perfekt, $futur, $imperativ, $endung)) {
+if ($id <= 0 || $verbIt === '' || $verbDe === '') {
+    $flash->set('error', 'Ungültige oder unvollständige Verbdaten. Italienisch und Deutsch sind erforderlich.');
+} elseif ($verbRepository->update($id, $verbIt, $verbDe, $praesens, $perfekt, $futur, $imperativ, $endung)) {
     $flash->set('success', 'Verb aktualisiert.');
 } else {
     $flash->set('error', 'Verb konnte nicht aktualisiert werden.');

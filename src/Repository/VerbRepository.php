@@ -7,29 +7,44 @@ final class VerbRepository
     {
     }
 
-    public function all(string $search = ''): array
+    /**
+     * Liefert Verben mit Volltext-/Teilwortsuche über Italienisch, Deutsch
+     * und sämtliche Konjugationsfelder. $sort: it oder de.
+     */
+    public function all(string $search = '', string $sort = 'it'): array
     {
         $search = trim($search);
+        $sort = $sort === 'de' ? 'de' : 'it';
+        $orderBy = $sort === 'de'
+            ? 'verb_de ASC, verb_it ASC, id ASC'
+            : 'verb_it ASC, verb_de ASC, id ASC';
+
+        $select = 'SELECT id, verb_it, verb_de, praesens, perfekt, futur, imperativ, endung FROM italienisch_verben';
+
         if ($search === '') {
-            $result = $this->db->query('SELECT id, verb, praesens, perfekt, futur, imperativ, endung FROM italienisch_verben ORDER BY verb ASC, id ASC');
+            $result = $this->db->query($select . ' ORDER BY ' . $orderBy);
             return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         }
 
+        $like = '%' . $search . '%';
+
         if (ctype_digit($search)) {
-            $stmt = $this->db->prepare('SELECT id, verb, praesens, perfekt, futur, imperativ, endung FROM italienisch_verben WHERE id = ? OR verb LIKE ? ORDER BY verb ASC, id ASC');
+            $stmt = $this->db->prepare(
+                $select . ' WHERE id = ? OR verb_it LIKE ? OR verb_de LIKE ? OR praesens LIKE ? OR perfekt LIKE ? OR futur LIKE ? OR imperativ LIKE ? OR endung LIKE ? ORDER BY ' . $orderBy
+            );
             if (!$stmt) {
                 return [];
             }
             $id = (int)$search;
-            $like = '%' . $search . '%';
-            $stmt->bind_param('is', $id, $like);
+            $stmt->bind_param('isssssss', $id, $like, $like, $like, $like, $like, $like, $like);
         } else {
-            $stmt = $this->db->prepare('SELECT id, verb, praesens, perfekt, futur, imperativ, endung FROM italienisch_verben WHERE verb LIKE ? OR praesens LIKE ? OR perfekt LIKE ? OR futur LIKE ? OR imperativ LIKE ? OR endung LIKE ? ORDER BY verb ASC, id ASC');
+            $stmt = $this->db->prepare(
+                $select . ' WHERE verb_it LIKE ? OR verb_de LIKE ? OR praesens LIKE ? OR perfekt LIKE ? OR futur LIKE ? OR imperativ LIKE ? OR endung LIKE ? ORDER BY ' . $orderBy
+            );
             if (!$stmt) {
                 return [];
             }
-            $like = '%' . $search . '%';
-            $stmt->bind_param('ssssss', $like, $like, $like, $like, $like, $like);
+            $stmt->bind_param('sssssss', $like, $like, $like, $like, $like, $like, $like);
         }
 
         $stmt->execute();
@@ -39,25 +54,44 @@ final class VerbRepository
         return $rows;
     }
 
-    public function add(string $verb, string $praesens, string $perfekt, string $futur, string $imperativ, string $endung): bool
-    {
-        $stmt = $this->db->prepare('INSERT INTO italienisch_verben (verb, praesens, perfekt, futur, imperativ, endung) VALUES (?, ?, ?, ?, ?, ?)');
+    public function add(
+        string $verbIt,
+        string $verbDe,
+        string $praesens,
+        string $perfekt,
+        string $futur,
+        string $imperativ,
+        string $endung
+    ): bool {
+        $stmt = $this->db->prepare(
+            'INSERT INTO italienisch_verben (verb_it, verb_de, praesens, perfekt, futur, imperativ, endung) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        );
         if (!$stmt) {
             return false;
         }
-        $stmt->bind_param('ssssss', $verb, $praesens, $perfekt, $futur, $imperativ, $endung);
+        $stmt->bind_param('sssssss', $verbIt, $verbDe, $praesens, $perfekt, $futur, $imperativ, $endung);
         $ok = $stmt->execute();
         $stmt->close();
         return $ok;
     }
 
-    public function update(int $id, string $verb, string $praesens, string $perfekt, string $futur, string $imperativ, string $endung): bool
-    {
-        $stmt = $this->db->prepare('UPDATE italienisch_verben SET verb = ?, praesens = ?, perfekt = ?, futur = ?, imperativ = ?, endung = ? WHERE id = ?');
+    public function update(
+        int $id,
+        string $verbIt,
+        string $verbDe,
+        string $praesens,
+        string $perfekt,
+        string $futur,
+        string $imperativ,
+        string $endung
+    ): bool {
+        $stmt = $this->db->prepare(
+            'UPDATE italienisch_verben SET verb_it = ?, verb_de = ?, praesens = ?, perfekt = ?, futur = ?, imperativ = ?, endung = ? WHERE id = ?'
+        );
         if (!$stmt) {
             return false;
         }
-        $stmt->bind_param('ssssssi', $verb, $praesens, $perfekt, $futur, $imperativ, $endung, $id);
+        $stmt->bind_param('sssssssi', $verbIt, $verbDe, $praesens, $perfekt, $futur, $imperativ, $endung, $id);
         $ok = $stmt->execute();
         $stmt->close();
         return $ok;

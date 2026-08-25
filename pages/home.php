@@ -25,20 +25,25 @@ $lesson = $lessonRaw !== '' && ctype_digit($lessonRaw)
 $search = trim((string) ($_GET['suche'] ?? ''));
 
 $msg = '';
+$searchResults = [];
 
 if ($search !== '') {
-    $card = ctype_digit($search)
-        ? $cardRepository->findById(
+    if (ctype_digit($search)) {
+        $card = $cardRepository->findById(
             (int) $search,
             $direction,
             $type
-        )
-        : $cardRepository->findByTerm(
+        );
+    } else {
+        $searchResults = $cardRepository->searchByTerm(
             $search,
             $direction,
             $type,
-            $lesson
+            $lesson,
+            50
         );
+        $card = $searchResults[0] ?? null;
+    }
 
     if (!$card) {
         $msg = 'Keine passende Lernkarte gefunden.';
@@ -176,13 +181,14 @@ $params = 'richtung=' . urlencode($direction)
                 </label>
 
                 <label class="search-grow">
-                    ID oder Suchbegriff
+                    Wortteil, Wort oder ID suchen
 
                     <input
                             type="search"
                             name="suche"
                             value="<?= Html::e($search) ?>"
-                            placeholder="z. B. amore oder 12"
+                            placeholder="z. B. cappu, Arbeit, lavoro oder 12"
+                            autocomplete="off"
                     >
                 </label>
 
@@ -218,6 +224,30 @@ $params = 'richtung=' . urlencode($direction)
             <div class="search-message">
                 <?= Html::e($msg) ?>
             </div>
+        <?php endif; ?>
+
+        <?php if ($search !== '' && !ctype_digit($search) && count($searchResults) > 1): ?>
+            <section class="search-results" aria-label="Suchergebnisse">
+                <div class="search-results-head">
+                    <strong><?= count($searchResults) ?> Treffer für „<?= Html::e($search) ?>“</strong>
+                    <span>Gewünschtes Wort auswählen</span>
+                </div>
+
+                <div class="search-results-list">
+                    <?php foreach ($searchResults as $result): ?>
+                        <a
+                                class="search-result<?= (int)$result['id'] === (int)($card['id'] ?? 0) ? ' active' : '' ?>"
+                                href="index.php?modus=<?= Html::e($mode) ?>&richtung=<?= Html::e($direction) ?>&typ=<?= Html::e($type) ?><?= $lesson !== null ? '&lektion=' . $lesson : '' ?>&suche=<?= (int)$result['id'] ?>"
+                        >
+                            <span class="search-result-id">#<?= (int)$result['id'] ?></span>
+                            <span class="search-result-de"><?= Html::e((string)$result['wort_de']) ?></span>
+                            <span class="search-result-arrow">→</span>
+                            <span class="search-result-it"><?= Html::e((string)$result['wort_it']) ?></span>
+                            <span class="search-result-lesson">Lektion <?= Html::e((string)($result['lektion'] ?? '–')) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
         <?php endif; ?>
 
         <section class="learning-card">

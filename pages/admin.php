@@ -58,12 +58,12 @@ declare(strict_types=1);if(!$auth->isAdmin()){require __DIR__.'/admin-login.php'
     <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>">
     <input type="hidden" name="form_action" value="add_verb">
     <div class="form-grid">
-        <label>Verb<input type="text" name="verb" maxlength="250" required></label>
+        <label>Verb Italienisch<input type="text" name="verb_it" maxlength="250" required></label><label>Verb Deutsch<input type="text" name="verb_de" maxlength="250" required></label>
         <label>Endung<select name="endung" required><option value="ire">ire</option><option value="are">are</option><option value="ere">ere</option><option value="unregelmässig">unregelmässig</option></select></label>
-        <label>Präsens<textarea name="praesens" maxlength="250"></textarea></label>
-        <label>Perfekt<textarea name="perfekt" maxlength="250"></textarea></label>
-        <label>Futur<textarea name="futur" maxlength="250"></textarea></label>
-        <label>Imperativ<textarea name="imperativ" maxlength="250"></textarea></label>
+        <label>Präsens<textarea name="praesens" maxlength="500"></textarea></label>
+        <label>Perfekt<textarea name="perfekt" maxlength="500"></textarea></label>
+        <label>Futur<textarea name="futur" maxlength="500"></textarea></label>
+        <label>Imperativ<textarea name="imperativ" maxlength="500"></textarea></label>
     </div>
     <button type="submit">Verb speichern</button>
 </form>
@@ -76,29 +76,29 @@ declare(strict_types=1);if(!$auth->isAdmin()){require __DIR__.'/admin-login.php'
 <?php endif;?>
 <form method="get" action="index.php" class="verb-search-form">
     <input type="hidden" name="action" value="admin">
-    <label>Verb, Form oder ID suchen
-        <input type="search" name="verb_suche" value="<?=Html::e($verbSearch)?>" placeholder="z. B. essere, sono oder 12">
+    <label>Volltextsuche: Italienisch, Deutsch, Form oder ID
+        <input type="search" name="verb_suche" value="<?=Html::e($verbSearch)?>" placeholder="z. B. essere, sein, sono, ruf oder 12">
     </label>
     <button type="submit">Suchen</button>
     <?php if($verbSearch!==''):?><a class="button neutral" href="index.php?action=admin#verben">Suche zurücksetzen</a><?php endif;?>
 </form>
-<div class="admin-section-actions"><a class="button neutral" href="index.php?action=verben">Geschützte Verbenliste</a><a class="button neutral" href="index.php?action=verben-pdf">Alle Verben / PDF</a></div>
+<div class="admin-section-actions"><a class="button neutral" href="index.php?action=verben">Geschützte Verbenliste</a><a class="button neutral" href="index.php?action=verben-pdf&amp;sort=it">PDF Italienisch A–Z</a><a class="button neutral" href="index.php?action=verben-pdf&amp;sort=de">PDF Deutsch A–Z</a></div>
 <p class="muted"><?=count($verbs)?> <?= $verbSearch!=='' ? 'Treffer' : 'Verben vorhanden' ?>.</p>
 <?php foreach($verbs as $verb):?>
 <details class="entry">
-    <summary>DB-ID #<?=(int)$verb['id']?> · <?=Html::e((string)$verb['verb'])?><?=trim((string)$verb['endung'])!==''?' · '.Html::e((string)$verb['endung']):''?></summary>
+    <summary>DB-ID #<?=(int)$verb['id']?> · <?=Html::e((string)$verb['verb_it'])?> ↔ <?=Html::e((string)$verb['verb_de'])?><?=trim((string)$verb['endung'])!==''?' · '.Html::e((string)$verb['endung']):''?></summary>
     <form method="post" action="index.php">
         <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>">
         <input type="hidden" name="form_action" value="update_verb">
         <input type="hidden" name="id" value="<?=(int)$verb['id']?>">
         <div class="form-grid">
             <label>Datenbank-ID<input type="text" value="<?=(int)$verb['id']?>" readonly></label>
-            <label>Verb<input type="text" name="verb" maxlength="250" value="<?=Html::e((string)$verb['verb'])?>" required></label>
+            <label>Verb Italienisch<input type="text" name="verb_it" maxlength="250" value="<?=Html::e((string)$verb['verb_it'])?>" required></label><label>Verb Deutsch<input type="text" name="verb_de" maxlength="250" value="<?=Html::e((string)$verb['verb_de'])?>" required></label>
             <label>Endung<select name="endung" required><?php foreach(['ire','are','ere','unregelmässig'] as $ending):?><option value="<?=Html::e($ending)?>" <?=((string)$verb['endung']===$ending)?'selected':''?>><?=Html::e($ending)?></option><?php endforeach;?></select></label>
-            <label>Präsens<textarea name="praesens" maxlength="250"><?=Html::e((string)$verb['praesens'])?></textarea></label>
-            <label>Perfekt<textarea name="perfekt" maxlength="250"><?=Html::e((string)$verb['perfekt'])?></textarea></label>
-            <label>Futur<textarea name="futur" maxlength="250"><?=Html::e((string)$verb['futur'])?></textarea></label>
-            <label>Imperativ<textarea name="imperativ" maxlength="250"><?=Html::e((string)$verb['imperativ'])?></textarea></label>
+            <label>Präsens<textarea name="praesens" maxlength="500"><?=Html::e((string)$verb['praesens'])?></textarea></label>
+            <label>Perfekt<textarea name="perfekt" maxlength="500"><?=Html::e((string)$verb['perfekt'])?></textarea></label>
+            <label>Futur<textarea name="futur" maxlength="500"><?=Html::e((string)$verb['futur'])?></textarea></label>
+            <label>Imperativ<textarea name="imperativ" maxlength="500"><?=Html::e((string)$verb['imperativ'])?></textarea></label>
         </div>
         <button type="submit">Änderungen speichern</button>
     </form>
