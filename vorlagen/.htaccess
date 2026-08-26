@@ -1,6 +1,6 @@
 Options -Indexes
 
-<FilesMatch "^(?!index\.php$|style\.css$|directory\.js$).+">
+<FilesMatch "^(?!index\.php$|style\.css$|directory\.js$|.*\.(xls|xlsx)$).+">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
