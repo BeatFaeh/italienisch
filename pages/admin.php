@@ -1,6 +1,45 @@
 <?php
-declare(strict_types=1);if(!$auth->isAdmin()){require __DIR__.'/admin-login.php';return;}$flashMessage=$flash->take();$adminSearch=trim((string)($_GET['suche']??''));$adminField=(string)($_GET['feld']??'all');$adminLimitRaw=(string)($_GET['anzahl']??'50');$allowedAdminLimits=['25','50','100','500','1000','alle'];if(!in_array($adminLimitRaw,$allowedAdminLimits,true))$adminLimitRaw='50';$adminLimit=$adminLimitRaw==='alle'?null:(int)$adminLimitRaw;$adminTotal=$cardRepository->adminCount($adminSearch,$adminField);$cards=$cardRepository->adminSearch($adminSearch,$adminField,$adminLimit);$verbSearch=trim((string)($_GET['verb_suche']??''));$verbs=$verbRepository->all($verbSearch);$grammarSearch=trim((string)($_GET['grammar_suche']??''));$grammarEntries=$grammarRepository->all($grammarSearch);?>
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administration – Italienische Lernkarten</title><link rel="stylesheet" href="assets/css/admin.css"></head><body><main class="admin-shell"><header class="topbar"><h1>Italienische Lernkarten · Administration</h1><nav class="nav-actions"><a class="button neutral" href="#neu">Neue Lernkarte</a><a class="button neutral" href="#lernkarten">Bearbeiten</a><a class="button neutral" href="#verben-neu">Neues Verb</a><a class="button neutral" href="#verben">Verben bearbeiten</a><a class="button neutral" href="index.php?action=verben">Verben anzeigen</a><a class="button neutral" href="#dokument-upload">Vorlage hochladen</a><a class="button neutral" href="vorlagen/">Vorlagen verwalten</a><a class="button neutral" href="#grammatik">Grammatik bearbeiten</a><a class="button neutral" href="grammatik/">Grammatik anzeigen</a><a class="button neutral" href="#passwort">Passwort</a><a class="button secondary" href="index.php">Öffentliche Ansicht</a><a class="button danger" href="index.php?action=logout">Abmelden</a></nav></header><?php $notice=(string)($_GET['notice']??'');$isUploadNotice=$notice==='upload';$isVerbNotice=$notice==='verb';$isGrammarNotice=$notice==='grammar';$isGrammarUploadNotice=$notice==='grammar-upload'; ?><?php if($flashMessage&&!$isUploadNotice&&!$isVerbNotice&&!$isGrammarNotice&&!$isGrammarUploadNotice):?><div class="message <?=Html::e($flashMessage['type'])?>" role="status" aria-live="polite"><?=Html::e($flashMessage['message'])?></div><?php endif;?>
+declare(strict_types=1);
+if(!$auth->isAdmin()){require __DIR__.'/admin-login.php';return;}
+$flashMessage=$flash->take();
+$adminSearch=trim((string)($_GET['suche']??''));
+$adminField=(string)($_GET['feld']??'all');
+$adminLimitRaw=(string)($_GET['anzahl']??'50');
+$allowedAdminLimits=['25','50','100','500','1000','alle'];
+if(!in_array($adminLimitRaw,$allowedAdminLimits,true))$adminLimitRaw='50';
+$adminLimit=$adminLimitRaw==='alle'?null:(int)$adminLimitRaw;
+$adminTotal=$cardRepository->adminCount($adminSearch,$adminField);
+$cards=$cardRepository->adminSearch($adminSearch,$adminField,$adminLimit);
+$verbSearch=trim((string)($_GET['verb_suche']??''));
+$verbs=$verbRepository->all($verbSearch);
+$grammarSearch=trim((string)($_GET['grammar_suche']??''));
+$grammarEntries=$grammarRepository->all($grammarSearch);
+$linkSearch=trim((string)($_GET['link_suche']??''));
+$linkEntries=$linkRepository->all($linkSearch);
+
+// Vorhandene Grammatik-PDFs direkt aus demselben Zielverzeichnis einlesen,
+// in das auch der bestehende Upload-Mechanismus speichert.
+$grammarPdfFiles=[];
+$grammarPdfDirectory=__DIR__.'/../grammatik';
+if(is_dir($grammarPdfDirectory)){
+    foreach(scandir($grammarPdfDirectory)?:[] as $grammarPdfFilename){
+        if($grammarPdfFilename==='.'||$grammarPdfFilename==='..')continue;
+        if(strtolower(pathinfo($grammarPdfFilename,PATHINFO_EXTENSION))!=='pdf')continue;
+        if(!is_file($grammarPdfDirectory.DIRECTORY_SEPARATOR.$grammarPdfFilename))continue;
+        $grammarPdfFiles[]=$grammarPdfFilename;
+    }
+    natcasesort($grammarPdfFiles);
+    $grammarPdfFiles=array_values($grammarPdfFiles);
+}
+$grammarPdfBasename=static function(string $pdf):string{
+    $pdf=trim($pdf);
+    if($pdf==='')return '';
+    if(preg_match('~^https?://~i',$pdf))return $pdf;
+    $pdf=str_replace('\\','/',$pdf);
+    return basename($pdf);
+};
+?>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administration – Italienische Lernkarten</title><link rel="stylesheet" href="assets/css/admin.css"></head><body><main class="admin-shell"><header class="topbar"><h1>Italienische Lernkarten · Administration</h1><nav class="nav-actions"><a class="button neutral" href="#neu">Neue Lernkarte</a><a class="button neutral" href="#lernkarten">Bearbeiten</a><a class="button neutral" href="#verben-neu">Neues Verb</a><a class="button neutral" href="#verben">Verben bearbeiten</a><a class="button neutral" href="index.php?action=verben">Verben anzeigen</a><a class="button neutral" href="#dokument-upload">Vorlage hochladen</a><a class="button neutral" href="vorlagen/">Vorlagen verwalten</a><a class="button neutral" href="#grammatik">Grammatik bearbeiten</a><a class="button neutral" href="#links">Links verwalten</a><a class="button neutral" href="grammatik/">Grammatik anzeigen</a><a class="button neutral" href="#passwort">Passwort</a><a class="button secondary" href="index.php">Öffentliche Ansicht</a><a class="button danger" href="index.php?action=logout">Abmelden</a></nav></header><?php $notice=(string)($_GET['notice']??'');$isUploadNotice=$notice==='upload';$isVerbNotice=$notice==='verb';$isGrammarNotice=$notice==='grammar';$isGrammarUploadNotice=$notice==='grammar-upload';$isLinkNotice=$notice==='links'; ?><?php if($flashMessage&&!$isUploadNotice&&!$isVerbNotice&&!$isGrammarNotice&&!$isGrammarUploadNotice&&!$isLinkNotice):?><div class="message <?=Html::e($flashMessage['type'])?>" role="status" aria-live="polite"><?=Html::e($flashMessage['message'])?></div><?php endif;?>
 <section class="panel" id="suche">
 <h2>Lernkarten suchen</h2>
 <form method="get" action="index.php">
@@ -116,10 +155,10 @@ declare(strict_types=1);if(!$auth->isAdmin()){require __DIR__.'/admin-login.php'
 
 <section class="panel" id="grammatik-neu">
 <h2>Neuer Grammatikeintrag</h2>
-<p class="muted">Stichwort, Erklärung und optionaler PDF-Link entsprechend der Tabelle <strong>italienisch_grammatik</strong>.</p>
+<p class="muted">Stichwort, Erklärung und optional eine bereits hochgeladene PDF-Datei aus dem Verzeichnis <strong>grammatik</strong> auswählen.</p>
 <form method="post" action="index.php">
 <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="add_grammar">
-<div class="form-grid"><label>Stichwort<input type="text" name="stichwort" maxlength="250" required></label><label>PDF-Link<input type="text" name="pdf" maxlength="500" placeholder="z. B. passato_prossimo.pdf"></label><label style="grid-column:1/-1">Erklärung<textarea name="erklaerung"></textarea></label></div>
+<div class="form-grid"><label>Stichwort<input type="text" name="stichwort" maxlength="250" required></label><label>PDF-Link<select name="pdf"><option value="">— kein PDF —</option><?php foreach($grammarPdfFiles as $grammarPdfFile):?><option value="<?=Html::e($grammarPdfFile)?>"><?=Html::e($grammarPdfFile)?></option><?php endforeach;?></select><?php if(!$grammarPdfFiles):?><small class="muted">Noch keine PDF-Datei im Verzeichnis grammatik vorhanden.</small><?php endif;?></label><label style="grid-column:1/-1">Erklärung<textarea name="erklaerung"></textarea></label></div>
 <button type="submit">Grammatikeintrag speichern</button>
 </form></section>
 
@@ -135,7 +174,63 @@ declare(strict_types=1);if(!$auth->isAdmin()){require __DIR__.'/admin-login.php'
 <?php if($flashMessage&&$isGrammarNotice):?><div class="message <?=Html::e($flashMessage['type'])?>" role="status"><?=Html::e($flashMessage['type']==='success'?'✓ ':'✗ ')?><?=Html::e($flashMessage['message'])?></div><?php endif;?>
 <form method="get" action="index.php" class="verb-search-form"><input type="hidden" name="action" value="admin"><label>Stichwort, Inhalt oder ID suchen<input type="search" name="grammar_suche" value="<?=Html::e($grammarSearch)?>" placeholder="z. B. Passato prossimo oder 4"></label><button type="submit">Suchen</button><?php if($grammarSearch!==''):?><a class="button neutral" href="index.php?action=admin#grammatik">Suche zurücksetzen</a><?php endif;?></form>
 <div class="admin-section-actions"><a class="button neutral" href="#grammatik-neu">Neuer Eintrag</a><a class="button neutral" href="#grammatik-dateien">PDF hochladen</a><a class="button neutral" href="grammatik/">Öffentliche Grammatik</a><a class="button neutral" href="grammatik/?verwaltung=1">Dateien verwalten</a></div><p class="muted"><?=count($grammarEntries)?> <?= $grammarSearch!=='' ? 'Treffer' : 'Grammatikeinträge vorhanden' ?>.</p>
-<?php foreach($grammarEntries as $grammar):?><details class="entry"><summary>DB-ID #<?=(int)$grammar['id']?> · <?=Html::e((string)$grammar['stichwort'])?></summary><form method="post" action="index.php"><input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="update_grammar"><input type="hidden" name="id" value="<?=(int)$grammar['id']?>"><div class="form-grid"><label>Datenbank-ID<input type="text" value="<?=(int)$grammar['id']?>" readonly></label><label>Stichwort<input type="text" name="stichwort" maxlength="250" value="<?=Html::e((string)$grammar['stichwort'])?>" required></label><label>PDF-Link<input type="text" name="pdf" maxlength="500" value="<?=Html::e((string)$grammar['pdf'])?>" placeholder="z. B. passato_prossimo.pdf"></label><label style="grid-column:1/-1">Erklärung<textarea name="erklaerung"><?=Html::e((string)$grammar['erklaerung'])?></textarea></label></div><button type="submit">Änderungen speichern</button></form><form method="post" action="index.php" class="delete-form" onsubmit="return confirm('Grammatikeintrag wirklich löschen?')"><input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="delete_grammar"><input type="hidden" name="id" value="<?=(int)$grammar['id']?>"><button class="danger" type="submit">Eintrag löschen</button></form></details><?php endforeach;?>
+<?php foreach($grammarEntries as $grammar): $currentGrammarPdf=$grammarPdfBasename((string)$grammar['pdf']); $currentGrammarPdfExists=$currentGrammarPdf===''||in_array($currentGrammarPdf,$grammarPdfFiles,true);?><details class="entry"><summary>DB-ID #<?=(int)$grammar['id']?> · <?=Html::e((string)$grammar['stichwort'])?></summary><form method="post" action="index.php"><input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="update_grammar"><input type="hidden" name="id" value="<?=(int)$grammar['id']?>"><div class="form-grid"><label>Datenbank-ID<input type="text" value="<?=(int)$grammar['id']?>" readonly></label><label>Stichwort<input type="text" name="stichwort" maxlength="250" value="<?=Html::e((string)$grammar['stichwort'])?>" required></label><label>PDF-Link<select name="pdf"><option value="" <?=$currentGrammarPdf===''?'selected':''?>>— kein PDF —</option><?php if(!$currentGrammarPdfExists):?><option value="<?=Html::e($currentGrammarPdf)?>" selected>⚠ <?=Html::e($currentGrammarPdf)?> (Datei nicht gefunden)</option><?php endif;?><?php foreach($grammarPdfFiles as $grammarPdfFile):?><option value="<?=Html::e($grammarPdfFile)?>" <?=$currentGrammarPdf===$grammarPdfFile?'selected':''?>><?=Html::e($grammarPdfFile)?></option><?php endforeach;?></select></label><label style="grid-column:1/-1">Erklärung<textarea name="erklaerung"><?=Html::e((string)$grammar['erklaerung'])?></textarea></label></div><button type="submit">Änderungen speichern</button></form><form method="post" action="index.php" class="delete-form" onsubmit="return confirm('Grammatikeintrag wirklich löschen?')"><input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="delete_grammar"><input type="hidden" name="id" value="<?=(int)$grammar['id']?>"><button class="danger" type="submit">Eintrag löschen</button></form></details><?php endforeach;?>
+</section>
+
+
+<section class="panel" id="links-neu">
+<h2>Neuen Link erfassen</h2>
+<p class="muted">Externe oder interne Links zentral in der Datenbank verwalten.</p>
+<form method="post" action="index.php">
+    <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>">
+    <input type="hidden" name="form_action" value="add_link">
+    <div class="form-grid">
+        <label>Titel<input type="text" name="titel" maxlength="250" required placeholder="z. B. Hueber Dieci A1"></label>
+        <label>URL<input type="url" name="url" maxlength="1000" required placeholder="https://..."></label>
+        <label style="grid-column:1/-1">Beschreibung<textarea name="beschreibung" placeholder="Optionale Beschreibung des Links"></textarea></label>
+    </div>
+    <button type="submit">Link speichern</button>
+</form>
+</section>
+
+<section class="panel list-panel" id="links">
+<h2>Links verwalten</h2>
+<?php if($flashMessage&&$isLinkNotice):?><div class="message <?=Html::e($flashMessage['type'])?>" role="status"><?=Html::e($flashMessage['type']==='success'?'✓ ':'✗ ')?><?=Html::e($flashMessage['message'])?></div><?php endif;?>
+<form method="get" action="index.php" class="verb-search-form">
+    <input type="hidden" name="action" value="admin">
+    <label>Link suchen
+        <input type="search" name="link_suche" value="<?=Html::e($linkSearch)?>" placeholder="Titel, URL, Beschreibung oder ID">
+    </label>
+    <button type="submit">Suchen</button>
+    <?php if($linkSearch!==''):?><a class="button neutral" href="index.php?action=admin#links">Suche zurücksetzen</a><?php endif;?>
+</form>
+<div class="admin-section-actions"><a class="button neutral" href="#links-neu">Neuer Link</a></div>
+<p class="muted"><?=count($linkEntries)?> <?= $linkSearch!=='' ? 'Treffer' : 'Links vorhanden' ?>.</p>
+<?php if(!$linkEntries):?><p class="muted">Noch keine Links erfasst.</p><?php endif;?>
+<?php foreach($linkEntries as $link):?>
+<details class="entry">
+    <summary>DB-ID #<?=(int)$link['id']?> · <?=Html::e((string)$link['titel'])?></summary>
+    <form method="post" action="index.php">
+        <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>">
+        <input type="hidden" name="form_action" value="update_link">
+        <input type="hidden" name="id" value="<?=(int)$link['id']?>">
+        <div class="form-grid">
+            <label>Datenbank-ID<input type="text" value="<?=(int)$link['id']?>" readonly></label>
+            <label>Titel<input type="text" name="titel" maxlength="250" value="<?=Html::e((string)$link['titel'])?>" required></label>
+            <label style="grid-column:1/-1">URL<input type="url" name="url" maxlength="1000" value="<?=Html::e((string)$link['url'])?>" required></label>
+            <label style="grid-column:1/-1">Beschreibung<textarea name="beschreibung"><?=Html::e((string)$link['beschreibung'])?></textarea></label>
+        </div>
+        <button type="submit">Änderungen speichern</button>
+        <a class="button neutral" href="<?=Html::e((string)$link['url'])?>" target="_blank" rel="noopener noreferrer">Link öffnen</a>
+    </form>
+    <form method="post" action="index.php" class="delete-form" onsubmit="return confirm('Link wirklich löschen?')">
+        <input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>">
+        <input type="hidden" name="form_action" value="delete_link">
+        <input type="hidden" name="id" value="<?=(int)$link['id']?>">
+        <button class="danger" type="submit">Link löschen</button>
+    </form>
+</details>
+<?php endforeach;?>
 </section>
 
 <section class="panel list-panel" id="passwort"><h2>Administrationspasswort ändern</h2><form method="post" action="index.php"><input type="hidden" name="csrf_token" value="<?=Html::e($csrf->token())?>"><input type="hidden" name="form_action" value="change_password"><div class="form-grid"><label>Bisheriges Passwort<input type="password" name="current_password" required></label><label>Neues Passwort<input type="password" name="new_password" minlength="12" required></label><label>Neues Passwort wiederholen<input type="password" name="new_password_repeat" minlength="12" required></label></div><button type="submit">Passwort ändern</button></form></section>
