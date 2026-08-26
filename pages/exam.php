@@ -46,8 +46,15 @@ $requestedLabel = $countRaw === 'alle' ? 'Alle verfügbaren Fragen' : $countRaw.
     </div>
     <form method="get" action="index.php" class="exam-config-form">
         <input type="hidden" name="action" value="pruefung">
-        <input type="hidden" name="richtung" value="<?=Html::e($direction)?>">
         <input type="hidden" name="typ" value="satz">
+
+        <label>
+            Richtung
+            <select name="richtung">
+                <option value="de-it" <?=$direction==='de-it'?'selected':''?>>Deutsch → Italienisch</option>
+                <option value="it-de" <?=$direction==='it-de'?'selected':''?>>Italienisch → Deutsch</option>
+            </select>
+        </label>
 
         <label>
             Anzahl Fragen
