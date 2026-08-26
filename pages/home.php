@@ -240,9 +240,15 @@ $params = 'richtung=' . urlencode($direction)
                                 href="index.php?modus=<?= Html::e($mode) ?>&richtung=<?= Html::e($direction) ?>&typ=<?= Html::e($type) ?><?= $lesson !== null ? '&lektion=' . $lesson : '' ?>&suche=<?= (int)$result['id'] ?>"
                         >
                             <span class="search-result-id">#<?= (int)$result['id'] ?></span>
-                            <span class="search-result-de"><?= Html::e((string)$result['wort_de']) ?></span>
-                            <span class="search-result-arrow">→</span>
-                            <span class="search-result-it"><?= Html::e((string)$result['wort_it']) ?></span>
+                            <?php if ($direction === 'de-it'): ?>
+                                <span class="search-result-de"><?= Html::e((string)$result['wort_de']) ?></span>
+                                <span class="search-result-arrow">→</span>
+                                <span class="search-result-it"><?= Html::e((string)$result['wort_it']) ?></span>
+                            <?php else: ?>
+                                <span class="search-result-it"><?= Html::e((string)$result['wort_it']) ?></span>
+                                <span class="search-result-arrow">→</span>
+                                <span class="search-result-de"><?= Html::e((string)$result['wort_de']) ?></span>
+                            <?php endif; ?>
                             <span class="search-result-lesson">Lektion <?= Html::e((string)($result['lektion'] ?? '–')) ?></span>
                         </a>
                     <?php endforeach; ?>
